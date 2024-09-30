@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Price</title>
+    <link rel="stylesheet" href="css/update_price.css">
+</head>
+<body>
+    <h1>Update Price</h1>
+    <div class="content">
+        <!-- Content for updating price goes here -->
+        <form id="priceForm">
+            <label for="itemCode">Item Code:</label>
+            <input type="text" id="itemCode" name="itemCode" required><br><br>
+            <label for="newPrice">New Price:</label>
+            <input type="number" id="newPrice" name="newPrice" step="0.01" required><br><br>
+            <input type="submit" value="Update Price">
+        </form>
+    </div>
+    <script src="js/update_price.js"></script>
+</body>
+</html>

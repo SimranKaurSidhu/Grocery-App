@@ -1,0 +1,122 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #ecf0f1;
+}
+
+.container {
+    padding: 20px;
+}
+
+#addStockButton, #buyOrderButton {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #1abc9c;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+#addStockButton:hover, #buyOrderButton:hover {
+    background-color: #16a085;
+}
+
+/* Stock Display Styles */
+#stockDisplay {
+    margin-top: 20px;
+}
+
+.category-section {
+    margin-bottom: 20px;
+}
+
+.category-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.product-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.product-item {
+    background-color: #ffffff;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #bdc3c7;
+}
+
+.product-item p {
+    margin: 5px 0;
+}
+
+/* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    border-radius: 5px;
+    position: relative;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+}
+
+label {
+    display: inline-block;
+    width: 150px;
+}
+
+select, input[type="number"], input[type="text"] {
+    width: 200px;
+}
+
+#confirmAddStock, #confirmBuyOrder {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#confirmAddStock:hover, #confirmBuyOrder:hover {
+    background-color: #2980b9;
+}
+
+#productInfo, #totalPriceInfo, #currentAmountInfo {
+    margin-top: 10px;
+    font-weight: bold;
+}

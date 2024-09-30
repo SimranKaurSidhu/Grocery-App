@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shop Manager Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <!-- Display shop name here -->
+                <h2 id="shopName"></h2>
+            </div>
+            <ul>
+                <li><a href="sell_items.html" target="contentFrame" class="tab-link">Sell Items</a></li>
+                <li><a href="add_stocks.html" target="contentFrame" class="tab-link">Add Stocks</a></li>
+                <li><a href="update_price.html" target="contentFrame" class="tab-link">Update Price</a></li>
+                <li><a href="return_order.html" target="contentFrame" class="tab-link">Return Order</a></li>
+                <li><a href="special_offer.html" target="contentFrame" class="tab-link">Special Offer</a></li>
+                <li><a href="profile.html" target="contentFrame" class="tab-link">Profile</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <iframe name="contentFrame" src="sell_items.html" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -7,6 +7,7 @@ body {
     width: 300px;
     margin: 50px auto;
     padding: 25px;
+    padding-right: 40px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -23,18 +24,24 @@ form label {
 
 form input {
     width: 100%;
-    padding: 8px;
+    height: 25px;
     margin-top: 5px;
 }
 
 button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 20px;
-    background-color: #5cb85c;
-    color: white;
-    border: none;
-    border-radius: 4px;
+    display: block;               /* Makes the button a block-level element */
+    width: 100%;                 /* Fixed width */
+    padding: 10px;                /* Padding */
+    margin: 20px 0px 0px 0px;     /* Top, horizontal, and bottom margins */
+    background-color: #5cb85c;    /* Background color */
+    color: white;                 /* Text color */
+    border: none;                 /* No border */
+    border-radius: 4px;           /* Rounded corners */
+    cursor: pointer;              /* Pointer cursor on hover */
+}
+
+button:hover {
+    background-color: #4cae4c;    /* Darker green on hover */
 }
 
 p {
