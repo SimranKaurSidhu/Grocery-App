@@ -7,17 +7,13 @@
 </head>
 <body>
     <h1>Sell Items</h1>
+    <div id="orderHeader">
+        <!-- Ordered items will be displayed here with heading -->
+    </div>
     <div class="content">
-        <!-- Content for selling items goes here -->
-        <p>Use this form to process sales transactions.</p>
-        <!-- Example form -->
-        <form id="sellForm">
-            <label for="itemCode">Item Code:</label>
-            <input type="text" id="itemCode" name="itemCode" required><br><br>
-            <label for="quantity">Quantity:</label>
-            <input type="number" id="quantity" name="quantity" required><br><br>
-            <input type="submit" value="Sell">
-        </form>
+        <div id="stockContainer">
+            <!-- Stock items will be loaded here -->
+        </div>
     </div>
     <script src="js/sell_items.js"></script>
 </body>

@@ -1,14 +1,167 @@
+/* css/special_offer.css */
+
 body {
-    margin: 20px;
+    margin: 0;
     font-family: Arial, sans-serif;
+    background-color: #ecf0f1;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 20px;
 }
 
 h1 {
+    text-align: center;
     color: #2c3e50;
 }
 
-.content {
-    background-color: #ffffff;
-    padding: 20px;
+.offer-list {
+    margin-top: 30px;
+}
+
+#addOfferButton {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
     border-radius: 5px;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+#addOfferButton:hover {
+    background-color: #27ae60;
+}
+
+#offerTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#offerTable th, #offerTable td {
+    border: 1px solid #bdc3c7;
+    padding: 10px;
+    text-align: center;
+}
+
+#offerTable th {
+    background-color: #34495e;
+    color: white;
+}
+
+.action-buttons button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 0 5px;
+}
+
+.action-buttons button:hover {
+    background-color: #2980b9;
+}
+
+.action-buttons .delete-button {
+    background-color: #e74c3c;
+}
+
+.action-buttons .delete-button:hover {
+    background-color: #c0392b;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 100px auto;
+    padding: 30px;
+    border: 1px solid #888;
+    width: 500px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.modal-content label {
+    display: block;
+    margin-top: 15px;
+    color: #34495e;
+    font-weight: bold;
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    background-color: #ecf0f1;
+    font-size: 16px;
+}
+
+.modal-actions {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.modal-actions button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    margin: 0 10px;
+}
+
+.modal-actions button:hover {
+    background-color: #2980b9;
+}
+
+#cancelButton {
+    background-color: #e74c3c;
+}
+
+#cancelButton:hover {
+    background-color: #c0392b;
 }

@@ -2,18 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Profile</title>
+    <title>Shop Profile</title>
     <link rel="stylesheet" href="css/profile.css">
 </head>
 <body>
-    <h1>Profile</h1>
-    <div class="content">
-        <!-- Content for profile goes here -->
-        <p>Name: <span id="ownerName">John Doe</span></p>
-        <p>Shop Name: <span id="shopName">My Shop</span></p>
-        <p>Email: <span id="email">john.doe@example.com</span></p>
-        <!-- Button to edit profile -->
-        <button id="editProfile">Edit Profile</button>
+    <div class="container">
+        <h1>Shop Profile</h1>
+        <div class="profile-card">
+            <div class="profile-info">
+                <label for="shopName">Shop Name:</label>
+                <input type="text" id="shopName" disabled>
+
+                <label for="shopAddress">Shop Address:</label>
+                <textarea id="shopAddress" rows="3" disabled></textarea>
+
+                <label for="shopPhone">Shop Phone Number:</label>
+                <input type="text" id="shopPhone" disabled>
+            </div>
+            <div class="profile-actions">
+                <button id="editButton">Edit</button>
+                <button id="updateButton" style="display: none;">Update</button>
+                <button id="cancelButton" style="display: none;">Cancel</button>
+                <button id="logoutButton">Log Out</button>
+            </div>
+        </div>
     </div>
     <script src="js/profile.js"></script>
 </body>

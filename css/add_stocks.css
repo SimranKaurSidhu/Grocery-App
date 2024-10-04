@@ -28,6 +28,7 @@ body {
     margin-top: 20px;
 }
 
+/* Updated Category Section Styles */
 .category-section {
     margin-bottom: 20px;
 }
@@ -36,22 +37,43 @@ body {
     font-size: 20px;
     font-weight: bold;
     color: #2c3e50;
+    margin-bottom: 10px;
 }
 
+/* Updated Product List Styles */
 .product-list {
+    display: flex;
+    flex-wrap: wrap;
     list-style-type: none;
     padding: 0;
+    margin: 0;
 }
 
+/* Updated Product Item Styles */
 .product-item {
+    width: calc(17% - 20px); /* Adjust as needed for the number of items per row */
+    margin: 10px;
     background-color: #ffffff;
-    margin: 10px 0;
     padding: 15px;
     border-radius: 5px;
     border: 1px solid #bdc3c7;
+    text-align: center;
 }
 
-.product-item p {
+.product-item img {
+    width: 180px; /* Fixed width */
+    height: 180px; /* Fixed height */
+    object-fit: cover; /* Ensures the image covers the container */
+    border-radius: 5px;
+    display: block;
+    margin: 0 auto; /* Centers the image */
+}
+
+.product-details {
+    margin-top: 10px;
+}
+
+.product-details p {
     margin: 5px 0;
 }
 
@@ -95,28 +117,61 @@ body {
 }
 
 label {
-    display: inline-block;
-    width: 150px;
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
 }
 
+/* Styled select boxes and input fields */
 select, input[type="number"], input[type="text"] {
-    width: 200px;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+    background-color: #ecf0f1;
 }
 
-#confirmAddStock, #confirmBuyOrder {
+select:disabled, input:disabled {
+    background-color: #bdc3c7;
+}
+
+/* Style for the Add Stock button inside the modal */
+#confirmAddStock {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
     background-color: #3498db;
     color: white;
     border: none;
-    padding: 10px 20px;
     cursor: pointer;
     border-radius: 5px;
+    display: block;
+    margin: 20px auto 0 auto;
 }
 
-#confirmAddStock:hover, #confirmBuyOrder:hover {
+#confirmAddStock:hover {
     background-color: #2980b9;
 }
 
-#productInfo, #totalPriceInfo, #currentAmountInfo {
-    margin-top: 10px;
+/* Style for the total price info */
+#totalPriceInfo {
     font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Style for the unit price info */
+#productInfo {
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Style for the form */
+#addStockForm {
+    max-width: 400px;
+    margin: 0 auto;
 }

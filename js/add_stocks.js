@@ -7,8 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const categorySelect = document.getElementById('categorySelect');
     const productSelect = document.getElementById('productSelect');
     const quantityInput = document.getElementById('quantityInput');
-    const discountInput = document.getElementById('discountInput');
-    const priceInfo = document.getElementById('priceInfo');
+    const quantityLabel = document.getElementById('quantityLabel');
     const unitPriceInfo = document.getElementById('unitPriceInfo');
     const productInfoDiv = document.getElementById('productInfo');
     const totalPriceInfo = document.getElementById('totalPriceInfo');
@@ -108,7 +107,6 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedProduct = JSON.parse(selectedOption.dataset.product);
             displayProductInfo(selectedProduct);
             quantityInput.disabled = false;
-            discountInput.disabled = false;
             confirmAddStock.disabled = false;
             calculateTotalPrice();
         } else {
@@ -119,8 +117,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Display product information
     function displayProductInfo(product) {
         productInfoDiv.style.display = 'block';
-        priceInfo.textContent = `${product.product_weight} ${product.product_unit} / $${product.product_price}`;
-        unitPriceInfo.textContent = `Price per unit: $${product.price_per_unit} / ${product.product_weight} ${product.product_unit}`;
+        // Update Price per unit display
+        unitPriceInfo.textContent = `Price per unit: $${product.price_per_unit} / ${product.product_unit}`;
+        // Update Quantity label
+        quantityLabel.textContent = `Quantity (in ${product.product_unit}):`;
     }
 
     // Reset product information
@@ -128,35 +128,29 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedProduct = null;
         productInfoDiv.style.display = 'none';
         quantityInput.value = 1;
-        discountInput.value = 0;
         quantityInput.disabled = true;
-        discountInput.disabled = true;
         confirmAddStock.disabled = true;
         totalPriceInfo.textContent = '';
+        quantityLabel.textContent = 'Quantity:';
     }
 
     // Calculate total price
     function calculateTotalPrice() {
         if (selectedProduct) {
             const quantity = parseFloat(quantityInput.value);
-            const discount = parseFloat(discountInput.value);
             const totalPrice = quantity * selectedProduct.price_per_unit;
-            const discountedPrice = totalPrice - (totalPrice * (discount / 100));
-            totalPriceInfo.textContent = `Total Price: $${discountedPrice.toFixed(2)}`;
+            totalPriceInfo.textContent = `Total Price: $${totalPrice.toFixed(2)} for ${quantity} ${selectedProduct.product_unit}`;
         }
     }
 
     quantityInput.addEventListener('input', calculateTotalPrice);
-    discountInput.addEventListener('input', calculateTotalPrice);
 
     // Handle Add Stock Form Submission
     addStockForm.addEventListener('submit', function(event) {
         event.preventDefault();
         if (selectedProduct) {
             const quantity = parseFloat(quantityInput.value);
-            const discount = parseFloat(discountInput.value);
             const totalPrice = quantity * selectedProduct.price_per_unit;
-            const discountedPrice = totalPrice - (totalPrice * (discount / 100));
 
             // Create product object to add to stock
             const productToAdd = {
@@ -166,8 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 product_price: selectedProduct.product_price,
                 price_per_unit: selectedProduct.price_per_unit,
                 product_quantity: quantity,
-                product_discount: discount,
-                product_amount: discountedPrice,
+                product_amount: totalPrice,
                 product_image: selectedProduct.product_image
             };
 
@@ -191,9 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Display the updated stock on the page
             displayStock();
-
-            // Display in console
-            console.log('Current Stock:', JSON.stringify(stock, null, 2));
 
             // Show Buy Order Button if stock has items
             if (stock.length > 0) {
@@ -239,14 +229,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const productItem = document.createElement('li');
                 productItem.className = 'product-item';
 
+                // Product image
+                const productImage = document.createElement('img');
+                productImage.src = product.product_image
+                productImage.alt = product.product_name;
+
                 // Product details
-                productItem.innerHTML = `
-                    <p><strong>Product Name:</strong> ${product.product_name}</p>
-                    <p><strong>Quantity:</strong> ${product.product_quantity}</p>
-                    <p><strong>Discount:</strong> ${product.product_discount}%</p>
-                    <p><strong>Total Amount:</strong> $${product.product_amount.toFixed(2)}</p>
+                const productDetails = document.createElement('div');
+                productDetails.className = 'product-details';
+                productDetails.innerHTML = `
+                    <p><strong>${product.product_name}</strong></p>
+                    <p>Quantity: ${product.product_quantity} ${product.product_unit}</p>
+                    <p>Total Amount: $${product.product_amount.toFixed(2)}</p>
                 `;
 
+                productItem.appendChild(productImage);
+                productItem.appendChild(productDetails);
                 productList.appendChild(productItem);
             });
 
@@ -277,8 +275,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Calculate total amount after discount
     totalDiscountInput.addEventListener('input', function() {
-        const totalAmount = parseFloat(totalAmountInput.value);
-        const discount = parseFloat(totalDiscountInput.value);
+        const totalAmount = stock.reduce((sum, category) => {
+            return sum + category.products.reduce((catSum, product) => {
+                return catSum + product.product_amount;
+            }, 0);
+        }, 0);
+        const discount = parseFloat(totalDiscountInput.value) || 0;
         const discountedTotal = totalAmount - (totalAmount * (discount / 100));
         totalAmountInput.value = discountedTotal.toFixed(2);
     });
@@ -304,7 +306,6 @@ document.addEventListener('DOMContentLoaded', function() {
             total: totalAmount
         };
 
-        console.log('Buying Order:', buyingOrder);
         // Send data to API
         fetch(`${apiURL}/buying_orders`, {
             method: 'POST',
