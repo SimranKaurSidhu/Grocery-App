@@ -15,13 +15,13 @@
                 <div class="total-amount" id="totalAmountDisplay" style="display: none;">Total Amount: $0.00</div>
             </div>
             <div class="center-item">
-                <!-- Updated: Button text changed to "Buy New Items" -->
-                <button id="addStockButton">Buy New Items</button>
+                <!-- Updated: Button text changed to "Add Items" -->
+                <button id="addStockButton">Add Items</button>
             </div>
             <div class="right-item">
-                <!-- Updated: Added Cancel Buy Order button -->
-                <button id="cancelBuyOrderButton" style="display: none;">Cancel Buy Order</button>
-                <button id="buyOrderButton" style="display: none;">Buy Order</button>
+                <!-- Updated: Added Cancel Items button -->
+                <button id="cancelBuyOrderButton" style="display: none;">Cancel Items</button>
+                <button id="buyOrderButton" style="display: none;">Finalize</button>
             </div>
         </div>
         <div id="stockDisplay">
@@ -63,7 +63,7 @@
     <div id="buyOrderModal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="closeBuyOrderModal">&times;</span>
-            <h2>Finalize Buying Amount</h2>
+            <h2>Finalize Amount</h2>
             <form id="buyOrderForm">
                 <p id="currentAmountInfo"></p>
                 <label for="totalDiscountInput">Total Discount (%):</label>
@@ -72,9 +72,8 @@
                 <label for="totalAmountInput">Total Amount:</label>
                 <input type="text" id="totalAmountInput" disabled>
 
-                <button type="submit" id="confirmBuyOrder">Buy Items</button>
+                <button type="submit" id="confirmBuyOrder">Done</button>
             </form>
-        </div>
     </div>
 
     <script src="js/add_stocks.js"></script>
