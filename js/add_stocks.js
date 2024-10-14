@@ -1,3 +1,5 @@
+/* js/add_stocks.js */
+
 const apiURL = 'http://127.0.0.1:8000';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const addStockForm = document.getElementById('addStockForm');
     const stockDisplay = document.getElementById('stockDisplay');
     const buyOrderButton = document.getElementById('buyOrderButton');
+    const cancelBuyOrderButton = document.getElementById('cancelBuyOrderButton'); // Added
+    const totalAmountDisplay = document.getElementById('totalAmountDisplay');
 
     // Buy Order Modal elements
     const buyOrderModal = document.getElementById('buyOrderModal');
@@ -185,9 +189,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Display the updated stock on the page
             displayStock();
 
-            // Show Buy Order Button if stock has items
+            // Show Buy Order Button and Total Amount if stock has items
             if (stock.length > 0) {
                 buyOrderButton.style.display = 'inline-block';
+                cancelBuyOrderButton.style.display = 'inline-block'; // Show Cancel Buy Order button
+                totalAmountDisplay.style.display = 'block'; // Show Total Amount label
             }
 
             // Reset form and close modal
@@ -206,63 +212,107 @@ document.addEventListener('DOMContentLoaded', function() {
         fetchCategories();
     }
 
-    // Function to display the current stock on the page
-    function displayStock() {
-        stockDisplay.innerHTML = ''; // Clear previous content
-
-        stock.forEach(category => {
-            // Create category section
-            const categorySection = document.createElement('div');
-            categorySection.className = 'category-section';
-
-            // Category title
-            const categoryTitle = document.createElement('h3');
-            categoryTitle.className = 'category-title';
-            categoryTitle.textContent = category.category_name;
-            categorySection.appendChild(categoryTitle);
-
-            // Product list
-            const productList = document.createElement('ul');
-            productList.className = 'product-list';
-
-            category.products.forEach(product => {
-                const productItem = document.createElement('li');
-                productItem.className = 'product-item';
-
-                // Product image
-                const productImage = document.createElement('img');
-                productImage.src = product.product_image
-                productImage.alt = product.product_name;
-
-                // Product details
-                const productDetails = document.createElement('div');
-                productDetails.className = 'product-details';
-                productDetails.innerHTML = `
-                    <p><strong>${product.product_name}</strong></p>
-                    <p>Quantity: ${product.product_quantity} ${product.product_unit}</p>
-                    <p>Total Amount: $${product.product_amount.toFixed(2)}</p>
-                `;
-
-                productItem.appendChild(productImage);
-                productItem.appendChild(productDetails);
-                productList.appendChild(productItem);
-            });
-
-            categorySection.appendChild(productList);
-            stockDisplay.appendChild(categorySection);
-        });
-    }
-
-    // Buy Order Button Click
-    buyOrderButton.addEventListener('click', function() {
-        // Calculate the total amount of the current stock
+    // Function to calculate total amount
+    function calculateTotalAmount() {
         const totalAmount = stock.reduce((sum, category) => {
             return sum + category.products.reduce((catSum, product) => {
                 return catSum + product.product_amount;
             }, 0);
         }, 0);
+        return totalAmount;
+    }
 
-        currentAmountInfo.textContent = `Amount of Current Stock: $${totalAmount.toFixed(2)}`;
+   // Inside the displayStock() function
+
+function displayStock() {
+    stockDisplay.innerHTML = ''; // Clear previous content
+
+    stock.forEach(category => {
+        // Create category section
+        const categorySection = document.createElement('div');
+        categorySection.className = 'category-section';
+
+        // Category title
+        const categoryTitle = document.createElement('h3');
+        categoryTitle.className = 'category-title';
+        categoryTitle.textContent = category.category_name;
+        categorySection.appendChild(categoryTitle);
+
+        // Product list
+        const productList = document.createElement('ul');
+        productList.className = 'product-list';
+
+        category.products.forEach(product => {
+            const productItem = document.createElement('li');
+            productItem.className = 'product-item';
+
+            // Close button at the top right corner
+            const closeButton = document.createElement('button');
+            closeButton.textContent = '✖';
+            closeButton.classList.add('close-button');
+            closeButton.addEventListener('click', () => {
+                // Remove product from category products array
+                const productIndexInCategory = category.products.indexOf(product);
+                if (productIndexInCategory > -1) {
+                    category.products.splice(productIndexInCategory, 1);
+                }
+
+                // If category has no products left, remove the category
+                if (category.products.length === 0) {
+                    const categoryIndexInStock = stock.indexOf(category);
+                    if (categoryIndexInStock > -1) {
+                        stock.splice(categoryIndexInStock, 1);
+                    }
+                }
+
+                // If no items left in stock, hide buttons and total amount
+                if (stock.length === 0) {
+                    buyOrderButton.style.display = 'none';
+                    cancelBuyOrderButton.style.display = 'none';
+                    totalAmountDisplay.style.display = 'none';
+                    totalAmountDisplay.textContent = 'Total Amount: $0.00';
+                }
+
+                // Re-display stock
+                displayStock();
+            });
+            productItem.appendChild(closeButton);
+
+            // Product image
+            const productImage = document.createElement('img');
+            productImage.src = product.product_image;
+            productImage.alt = product.product_name;
+
+            // Product details
+            const productDetails = document.createElement('div');
+            productDetails.className = 'product-details';
+            productDetails.innerHTML = `
+                <p><strong>${product.product_name}</strong></p>
+                <p>Quantity: ${product.product_quantity} ${product.product_unit}</p>
+                <p>Total Price: $${product.product_amount.toFixed(2)}</p>
+            `;
+
+            productItem.appendChild(productImage);
+            productItem.appendChild(productDetails);
+            productList.appendChild(productItem);
+        });
+
+        categorySection.appendChild(productList);
+        stockDisplay.appendChild(categorySection);
+    });
+
+    // Update total amount display
+    const totalAmount = calculateTotalAmount();
+    totalAmountDisplay.textContent = `Total Amount: $${totalAmount.toFixed(2)}`;
+}
+
+
+    // Buy Order Button Click
+    buyOrderButton.addEventListener('click', function() {
+        // Calculate the total amount of the current stock
+        const totalAmount = calculateTotalAmount();
+
+        currentAmountInfo.textContent = `Amount of Buying Items: $${totalAmount.toFixed(2)}`;
         totalAmountInput.value = totalAmount.toFixed(2);
         buyOrderModal.style.display = 'block';
     });
@@ -275,11 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Calculate total amount after discount
     totalDiscountInput.addEventListener('input', function() {
-        const totalAmount = stock.reduce((sum, category) => {
-            return sum + category.products.reduce((catSum, product) => {
-                return catSum + product.product_amount;
-            }, 0);
-        }, 0);
+        const totalAmount = calculateTotalAmount();
         const discount = parseFloat(totalDiscountInput.value) || 0;
         const discountedTotal = totalAmount - (totalAmount * (discount / 100));
         totalAmountInput.value = discountedTotal.toFixed(2);
@@ -321,10 +367,26 @@ document.addEventListener('DOMContentLoaded', function() {
             stock = [];
             stockDisplay.innerHTML = '';
             buyOrderButton.style.display = 'none';
+            cancelBuyOrderButton.style.display = 'none'; // Hide Cancel Buy Order button
+            totalAmountDisplay.style.display = 'none'; // Hide Total Amount label
             buyOrderModal.style.display = 'none';
             buyOrderForm.reset();
+            totalAmountDisplay.textContent = 'Total Amount: $0.00';
             alert('Purchase order successfully created!');
         })
         .catch(error => console.error('Error creating buying order:', error));
+    });
+
+    // Handle Cancel Buy Order Button Click
+    cancelBuyOrderButton.addEventListener('click', function() {
+        if (confirm('Are you sure you want to cancel the current buy order?')) {
+            // Reset stock
+            stock = [];
+            stockDisplay.innerHTML = '';
+            buyOrderButton.style.display = 'none';
+            cancelBuyOrderButton.style.display = 'none'; // Hide Cancel Buy Order button
+            totalAmountDisplay.style.display = 'none'; // Hide Total Amount label
+            totalAmountDisplay.textContent = 'Total Amount: $0.00';
+        }
     });
 });

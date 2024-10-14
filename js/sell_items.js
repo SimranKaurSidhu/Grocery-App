@@ -2,13 +2,15 @@
 
 const apiURL = 'http://127.0.0.1:8000';
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const stockContainer = document.getElementById('stockContainer');
     const orderHeader = document.getElementById('orderHeader');
 
     let stock = [];
     let stockMap = {};
     let orderItems = [];
+    let specialOffers = [];
+    let selectedOffer = null;
 
     const shopId = localStorage.getItem('shop_id');
 
@@ -53,6 +55,21 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Error fetching stock:', error);
             stockContainer.innerHTML = '<p>Error loading stock</p>';
+        });
+
+    // Fetch special offers for the shop
+    fetch(`${apiURL}/get_special_offers/${shopId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch special offers');
+            }
+            return response.json();
+        })
+        .then(data => {
+            specialOffers = data;
+        })
+        .catch(error => {
+            console.error('Error fetching special offers:', error);
         });
 
     // Function to display stock items grouped by category
@@ -145,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderOrderItems() {
         orderHeader.innerHTML = '';
         if (orderItems.length > 0) {
-            const heading = document.createElement('h2');
+            const heading = document.createElement('h3');
             heading.textContent = 'Ordered Items';
             orderHeader.appendChild(heading);
 
@@ -157,7 +174,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
             orderItems.forEach((item, index) => {
                 const itemDiv = document.createElement('div');
-                itemDiv.classList.add('order-item');
+                itemDiv.classList.add('order-item', 'order-card');
+
+                // Close button at the top right corner
+                const closeButton = document.createElement('button');
+                closeButton.textContent = '✖';
+                closeButton.classList.add('close-button');
+                closeButton.addEventListener('click', () => {
+                    const stockItem = stockMap[item.product_name];
+                    // Increase available quantity by item.quantity
+                    stockItem.available_quantity += item.quantity;
+                    // Remove item from order
+                    orderItems.splice(index, 1);
+                    renderOrderItems();
+                    displayStock();
+                });
+                itemDiv.appendChild(closeButton);
 
                 const img = document.createElement('img');
                 img.src = item.product_image;
@@ -167,19 +199,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 name.textContent = item.product_name;
 
                 const amountDisplay = document.createElement('p');
-                amountDisplay.textContent = `Amount: $${item.amount} for ${item.quantity} ${item.product_unit}`;
+                amountDisplay.textContent = `Price: $${item.amount} for ${item.quantity} ${item.product_unit}`;
 
                 const qtyControls = document.createElement('div');
                 qtyControls.classList.add('qty-controls');
 
                 const minusButton = document.createElement('button');
                 minusButton.textContent = '-';
+                minusButton.classList.add('qty-button');
+
                 const qtyDisplay = document.createElement('span');
                 qtyDisplay.textContent = item.quantity;
+                qtyDisplay.classList.add('qty-display');
+
                 const plusButton = document.createElement('button');
                 plusButton.textContent = '+';
-                const closeButton = document.createElement('button');
-                closeButton.textContent = '✖'; // Close button
+                plusButton.classList.add('qty-button');
 
                 // Handle minus button click
                 minusButton.addEventListener('click', () => {
@@ -188,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         item.quantity -= 1;
                         item.amount = (item.price_per_unit * item.quantity).toFixed(2);
                         qtyDisplay.textContent = item.quantity;
-                        amountDisplay.textContent = `Amount: $${item.amount} for ${item.quantity} ${item.product_unit}`;
+                        amountDisplay.textContent = `Price: $${item.amount} for ${item.quantity} ${item.product_unit}`;
                         // Increase available quantity
                         stockItem.available_quantity += 1;
                     } else {
@@ -208,29 +243,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         item.quantity += 1;
                         item.amount = (item.price_per_unit * item.quantity).toFixed(2);
                         qtyDisplay.textContent = item.quantity;
-                        amountDisplay.textContent = `Amount: $${item.amount} for ${item.quantity} ${item.product_unit}`;
+                        amountDisplay.textContent = `Price: $${item.amount} for ${item.quantity} ${item.product_unit}`;
                         // Decrease available quantity
                         stockItem.available_quantity -= 1;
+                        renderOrderItems();
+                        displayStock();
                     } else {
                         alert('No more stock available for this item.');
                     }
                 });
 
-                // Handle close button click
-                closeButton.addEventListener('click', () => {
-                    const stockItem = stockMap[item.product_name];
-                    // Increase available quantity by item.quantity
-                    stockItem.available_quantity += item.quantity;
-                    // Remove item from order
-                    orderItems.splice(index, 1);
-                    renderOrderItems();
-                    displayStock();
-                });
-
                 qtyControls.appendChild(minusButton);
                 qtyControls.appendChild(qtyDisplay);
                 qtyControls.appendChild(plusButton);
-                qtyControls.appendChild(closeButton);
 
                 itemDiv.appendChild(img);
                 itemDiv.appendChild(name);
@@ -241,234 +266,391 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Calculate total amount
-            const totalAmount = orderItems.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2);
-            const specialOffer = 'None';
-            const discount = 0;
+            const totalAmount = orderItems.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+
+            let discount = 0;
+
+            if (selectedOffer) {
+                if (selectedOffer.discount_percentage > 0) {
+                    discount = (totalAmount * (selectedOffer.discount_percentage / 100));
+                } else if (selectedOffer.discount_amount > 0) {
+                    discount = selectedOffer.discount_amount;
+                }
+            }
+
             const total = (totalAmount - discount).toFixed(2);
 
-            // Create summary section
+            // Create summary item
             const summaryDiv = document.createElement('div');
-            summaryDiv.classList.add('order-summary');
+            summaryDiv.classList.add('order-summary', 'order-card');
+
+            // Center the order details vertically
+            summaryDiv.style.display = 'flex';
+            summaryDiv.style.flexDirection = 'column';
+            summaryDiv.style.justifyContent = 'center';
 
             const totalAmountP = document.createElement('p');
-            totalAmountP.textContent = `Amount: $${totalAmount}`;
+            totalAmountP.textContent = `Total Amount: $${totalAmount.toFixed(2)}`;
             summaryDiv.appendChild(totalAmountP);
 
-            const specialOfferP = document.createElement('p');
-            specialOfferP.textContent = `Special Offer: ${specialOffer}`;
+            // Special Offer label
+            const specialOfferP = document.createElement('button');
+            specialOfferP.style.backgroundColor = '#fff';
+            specialOfferP.style.color = '#e67e22';
+            specialOfferP.style.fontWeight = 'bold';
+            specialOfferP.style.fontSize = '1.1em';
+            specialOfferP.style.padding = '5px 10px';
+            specialOfferP.style.border = '2px solid #e67e22';
+            specialOfferP.innerHTML = `Special Offer: <br><span id="specialOfferText">${selectedOffer ? selectedOffer.offer_name : '&#10005;'}</span>`;
+            specialOfferP.style.cursor = 'pointer';
+            specialOfferP.addEventListener('click', openSpecialOfferPopup);
             summaryDiv.appendChild(specialOfferP);
 
             const discountP = document.createElement('p');
-            discountP.textContent = `Discount: $${discount}`;
+            discountP.textContent = `Discount: $${discount.toFixed(2)}`;
             summaryDiv.appendChild(discountP);
 
             const totalP = document.createElement('p');
-            totalP.textContent = `Total: $${total}`;
+            totalP.textContent = `Total Amount: $${total}`;
             summaryDiv.appendChild(totalP);
 
-            // Place Order Button
+            // Sell Items Button
             const placeOrderButton = document.createElement('button');
-            placeOrderButton.textContent = 'Place Order';
+            placeOrderButton.textContent = 'Sell Items';
             placeOrderButton.classList.add('place-order-button');
             placeOrderButton.addEventListener('click', () => {
-                openOrderPopup(totalAmount, discount, total);
+                openOrderPopup(totalAmount.toFixed(2), discount.toFixed(2), total);
             });
             summaryDiv.appendChild(placeOrderButton);
 
-            // Append orderItemsContainer and summaryDiv to orderContainer
+            // Append summaryDiv to orderItemsContainer
+            orderItemsContainer.appendChild(summaryDiv);
+
+            // Append orderItemsContainer to orderContainer
             orderContainer.appendChild(orderItemsContainer);
-            orderContainer.appendChild(summaryDiv);
 
             orderHeader.appendChild(orderContainer);
         }
-    }
 
-    // Function to open the order confirmation popup
-    function openOrderPopup(amount, discount, total) {
-        // Create overlay
-        const overlay = document.createElement('div');
-        overlay.classList.add('modal-overlay');
+        // Function to open the special offer selection popup
+        function openSpecialOfferPopup() {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.classList.add('modal-overlay');
 
-        // Create modal content
-        const modal = document.createElement('div');
-        modal.classList.add('modal');
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.classList.add('modal');
 
-        const modalHeader = document.createElement('h3');
-        modalHeader.textContent = 'Confirm Order';
-        modal.appendChild(modalHeader);
+            const modalHeader = document.createElement('h3');
+            modalHeader.textContent = 'Select Special Offer';
+            modal.appendChild(modalHeader);
 
-        const amountP = document.createElement('p');
-        amountP.textContent = `Amount: $${amount}`;
-        modal.appendChild(amountP);
+            // Check if specialOffers is empty
+            if (specialOffers.length === 0) {
+                const noOffersP = document.createElement('p');
+                noOffersP.textContent = 'No special offers available.';
+                modal.appendChild(noOffersP);
+            } else {
+                // Create list of offers
+                const offersList = document.createElement('ul');
+                offersList.style.listStyleType = 'none';
+                offersList.style.padding = '0';
 
-        const discountP = document.createElement('p');
-        discountP.textContent = `Discount: $${discount}`;
-        modal.appendChild(discountP);
+                specialOffers.forEach(offer => {
+                    const offerItem = document.createElement('li');
+                    offerItem.classList.add('offer-item'); // Add this line
+                    offerItem.style.marginBottom = '10px';
+                    
 
-        const totalP = document.createElement('p');
-        totalP.textContent = `Total: $${total}`;
-        modal.appendChild(totalP);
+                    // Radio button input
+                    const radioInput = document.createElement('input');
+                    radioInput.type = 'radio';
+                    radioInput.name = 'specialOffer';
+                    radioInput.value = offer.offer_id;
+                    radioInput.id = `offer-${offer.offer_id}`;
+                    radioInput.style.width = '30px';
 
-        // Customer Name
-        const customerNameLabel = document.createElement('label');
-        customerNameLabel.textContent = 'Customer Name: ';
-        customerNameLabel.setAttribute('for', 'customer-name');
-        modal.appendChild(customerNameLabel);
+                    // If this offer is currently selected, check the radio button
+                    if (selectedOffer && selectedOffer.offer_id === offer.offer_id) {
+                        radioInput.checked = true;
+                    }
 
-        const customerNameInput = document.createElement('input');
-        customerNameInput.type = 'text';
-        customerNameInput.id = 'customer-name';
-        customerNameInput.placeholder = 'Enter customer name';
-        customerNameInput.required = true;
-        modal.appendChild(customerNameInput);
+                    // Offer label
+                    const label = document.createElement('label');
+                    label.htmlFor = `offer-${offer.offer_id}`;
+                    label.classList.add('offer-label'); // Add this line
+                    label.textContent = `${offer.offer_name} - `;
+                    // Display discount percentage or amount
+                    if (offer.discount_percentage > 0) {
+                        label.textContent += `${offer.discount_percentage}% off`;
+                    } else if (offer.discount_amount > 0) {
+                        label.textContent += `$${offer.discount_amount} off`;
+                    }
 
-        // Customer Mobile Number
-        const customerMobileLabel = document.createElement('label');
-        customerMobileLabel.textContent = 'Customer Mobile Number: ';
-        customerMobileLabel.setAttribute('for', 'customer-mobile');
-        modal.appendChild(customerMobileLabel);
+                    offerItem.appendChild(radioInput);
+                    offerItem.appendChild(label);
 
-        const customerMobileInput = document.createElement('input');
-        customerMobileInput.type = 'tel';
-        customerMobileInput.id = 'customer-mobile';
-        customerMobileInput.placeholder = 'Enter mobile number';
-        customerMobileInput.required = true;
-        modal.appendChild(customerMobileInput);
+                    offersList.appendChild(offerItem);
+                });
 
-        // Button Container
-        const buttonContainer = document.createElement('div');
-        buttonContainer.classList.add('modal-buttons');
+                // Option to deselect special offer
+                const offerItem = document.createElement('li');
+                offerItem.classList.add('offer-item'); // Add this line
+                offerItem.style.marginBottom = '10px';
 
-        const cancelButton = document.createElement('button');
-        cancelButton.textContent = 'Cancel';
-        cancelButton.classList.add('cancel-button');
-        cancelButton.addEventListener('click', () => {
-            document.body.removeChild(overlay);
-        });
+                const radioInput = document.createElement('input');
+                radioInput.type = 'radio';
+                radioInput.name = 'specialOffer';
+                radioInput.value = 'none';
+                radioInput.id = 'offer-none';
+                radioInput.style.width = '30px';
 
-        const confirmButton = document.createElement('button');
-        confirmButton.textContent = 'Confirm';
-        confirmButton.classList.add('confirm-button');
-        confirmButton.addEventListener('click', () => {
-            const customerName = customerNameInput.value.trim();
-            const customerMobile = customerMobileInput.value.trim();
+                if (!selectedOffer) {
+                    radioInput.checked = true;
+                }
 
-            if (customerName === '' || customerMobile === '') {
-                alert('Please enter customer name and mobile number.');
-                return;
+                const label = document.createElement('label');
+                label.htmlFor = 'offer-none';
+                label.classList.add('offer-label'); // Add this line
+                label.textContent = 'No Special Offer';
+
+                offerItem.appendChild(radioInput);
+                offerItem.appendChild(label);
+
+                offersList.appendChild(offerItem);
+
+                modal.appendChild(offersList);
             }
 
-            // Prepare order data
-            const orderId = 'SO-' + Date.now();
+            // Button Container
+            const buttonContainer = document.createElement('div');
+            buttonContainer.classList.add('modal-buttons');
 
-            // Group orderItems by category
-            const soldItems = [];
-
-            orderItems.forEach(item => {
-                // Find or create category in soldItems
-                let category = soldItems.find(cat => cat.category_name === item.category_name);
-                if (!category) {
-                    category = {
-                        category_name: item.category_name,
-                        products: []
-                    };
-                    soldItems.push(category);
-                }
-                // Add product to category
-                category.products.push({
-                    product_name: item.product_name,
-                    product_unit: item.product_unit,
-                    product_weight: item.product_weight,
-                    product_price: item.product_price,
-                    price_per_unit: item.price_per_unit,
-                    product_quantity: item.quantity,
-                    product_amount: parseFloat(item.amount),
-                    product_image: item.product_image
-                });
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.classList.add('cancel-button');
+            cancelButton.addEventListener('click', () => {
+                document.body.removeChild(overlay);
             });
 
-            const sellingOrder = {
-                selling_order_id: orderId,
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = 'Confirm';
+            confirmButton.classList.add('confirm-button');
+            confirmButton.addEventListener('click', () => {
+                // Get selected offer
+                const selectedRadio = modal.querySelector('input[name="specialOffer"]:checked');
+                if (selectedRadio && selectedRadio.value !== 'none') {
+                    const offerId = selectedRadio.value;
+                    selectedOffer = specialOffers.find(offer => offer.offer_id === offerId);
+                } else {
+                    selectedOffer = null;
+                }
+
+                // Update the order summary
+                renderOrderItems();
+
+                document.body.removeChild(overlay);
+            });
+
+            buttonContainer.appendChild(cancelButton);
+            buttonContainer.appendChild(confirmButton);
+
+            modal.appendChild(buttonContainer);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+
+        // Function to open the order confirmation popup
+        function openOrderPopup(amount, discount, total) {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.classList.add('modal-overlay');
+
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.classList.add('modal');
+
+            const modalHeader = document.createElement('h3');
+            modalHeader.textContent = 'Confirm Order';
+            modal.appendChild(modalHeader);
+
+            const amountP = document.createElement('p');
+            amountP.textContent = `Amount: $${parseFloat(amount).toFixed(2)}`;
+            modal.appendChild(amountP);
+
+            const discountP = document.createElement('p');
+            discountP.textContent = `Discount: $${parseFloat(discount).toFixed(2)}`;
+            modal.appendChild(discountP);
+
+            const totalP = document.createElement('p');
+            totalP.textContent = `Total: $${parseFloat(total).toFixed(2)}`;
+            modal.appendChild(totalP);
+
+            // Customer Name
+            const customerNameLabel = document.createElement('label');
+            customerNameLabel.textContent = 'Customer Name: ';
+            customerNameLabel.setAttribute('for', 'customer-name');
+            modal.appendChild(customerNameLabel);
+
+            const customerNameInput = document.createElement('input');
+            customerNameInput.type = 'text';
+            customerNameInput.id = 'customer-name';
+            customerNameInput.placeholder = 'Enter customer name';
+            customerNameInput.required = true;
+            modal.appendChild(customerNameInput);
+
+            // Customer Mobile Number
+            const customerMobileLabel = document.createElement('label');
+            customerMobileLabel.textContent = 'Customer Mobile Number: ';
+            customerMobileLabel.setAttribute('for', 'customer-mobile');
+            modal.appendChild(customerMobileLabel);
+
+            const customerMobileInput = document.createElement('input');
+            customerMobileInput.type = 'tel';
+            customerMobileInput.id = 'customer-mobile';
+            customerMobileInput.placeholder = 'Enter mobile number';
+            customerMobileInput.required = true;
+            modal.appendChild(customerMobileInput);
+
+            // Button Container
+            const buttonContainer = document.createElement('div');
+            buttonContainer.classList.add('modal-buttons');
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.classList.add('cancel-button');
+            cancelButton.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+            });
+
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = 'Confirm';
+            confirmButton.classList.add('confirm-button');
+            confirmButton.addEventListener('click', () => {
+                const customerName = customerNameInput.value.trim();
+                const customerMobile = customerMobileInput.value.trim();
+
+                if (customerName === '' || customerMobile === '') {
+                    alert('Please enter customer name and mobile number.');
+                    return;
+                }
+
+                // Prepare order data
+                const orderId = 'SO-' + Date.now();
+
+                // Group orderItems by category
+                const soldItems = [];
+
+                orderItems.forEach(item => {
+                    // Find or create category in soldItems
+                    let category = soldItems.find(cat => cat.category_name === item.category_name);
+                    if (!category) {
+                        category = {
+                            category_name: item.category_name,
+                            products: []
+                        };
+                        soldItems.push(category);
+                    }
+                    // Add product to category
+                    category.products.push({
+                        product_name: item.product_name,
+                        product_unit: item.product_unit,
+                        product_weight: item.product_weight,
+                        product_price: item.product_price,
+                        price_per_unit: item.price_per_unit,
+                        product_quantity: item.quantity,
+                        product_amount: parseFloat(item.amount),
+                        product_image: item.product_image
+                    });
+                });
+
+                const sellingOrder = {
+                    selling_order_id: orderId,
+                    shop_id: shopId,
+                    date: new Date().toISOString(),
+                    customer_name: customerName,
+                    customer_mobile: customerMobile,
+                    soldItems: soldItems,
+                    offer: selectedOffer ? selectedOffer : null,
+                    amount: parseFloat(amount),
+                    discount: parseFloat(discount),
+                    total: parseFloat(total)
+                };
+
+                // Send data to API
+                fetch(`${apiURL}/selling_orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sellingOrder)
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to place order.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Update stock quantities
+                        updateStockQuantities();
+                        // Clear orderItems and re-render
+                        orderItems = [];
+                        selectedOffer = null;
+                        renderOrderItems();
+                        alert('Order placed successfully!');
+                        document.body.removeChild(overlay);
+                    })
+                    .catch(error => {
+                        console.error('Error placing order:', error);
+                        alert('Failed to place order.');
+                    });
+            });
+
+            buttonContainer.appendChild(cancelButton);
+            buttonContainer.appendChild(confirmButton);
+
+            modal.appendChild(buttonContainer);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+
+        // Function to update stock quantities in the backend
+        function updateStockQuantities() {
+            // Prepare data to send
+            const stockUpdate = {
                 shop_id: shopId,
-                date: new Date().toISOString(),
-                customer_name: customerName,
-                customer_mobile: customerMobile,
-                soldItems: soldItems,
-                offer: "null", // Assuming no special offer
-                amount: parseFloat(amount),
-                discount: parseFloat(discount),
-                total: parseFloat(total)
+                stock: stock.map(category => ({
+                    category_name: category.category_name,
+                    products: category.products.map(product => ({
+                        product_name: product.product_name,
+                        product_quantity: product.available_quantity
+                    }))
+                }))
             };
 
-            console.log('Selling Order:', sellingOrder);
-            // Send data to API
-            fetch(`${apiURL}/selling_orders`, {
-                method: 'POST',
+            // Send PUT request to update stock
+            fetch(`${apiURL}/update_stock`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(sellingOrder)
+                body: JSON.stringify(stockUpdate)
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to place order.');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Update stock quantities
-                updateStockQuantities();
-                // Clear orderItems and re-render
-                orderItems = [];
-                renderOrderItems();
-                alert('Order placed successfully!');
-                document.body.removeChild(overlay);
-            })
-            .catch(error => {
-                console.error('Error placing order:', error);
-                alert('Failed to place order.');
-            });
-        });
-
-        buttonContainer.appendChild(cancelButton);
-        buttonContainer.appendChild(confirmButton);
-
-        modal.appendChild(buttonContainer);
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-    }
-
-    // Function to update stock quantities in the backend
-    function updateStockQuantities() {
-        // Prepare data to send
-        const stockUpdate = {
-            shop_id: shopId,
-            stock: stock.map(category => ({
-                category_name: category.category_name,
-                products: category.products.map(product => ({
-                    product_name: product.product_name,
-                    product_quantity: product.available_quantity
-                }))
-            }))
-        };
-
-        // Send PUT request to update stock
-        fetch(`${apiURL}/update_stock`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(stockUpdate)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to update stock.');
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error('Error updating stock:', error);
-            alert('Failed to update stock.');
-        });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to update stock.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Stock updated successfully:', data);
+                })
+                .catch(error => {
+                    console.error('Error updating stock:', error);
+                    alert('Failed to update stock.');
+                });
+        }
     }
 });

@@ -9,12 +9,24 @@
 
 <body>
     <div class="container">
-        <button id="addStockButton">Add New Stock</button>
+        <div class="top-bar">
+            <div class="left-item">
+                <!-- Updated: Total Amount display starts hidden -->
+                <div class="total-amount" id="totalAmountDisplay" style="display: none;">Total Amount: $0.00</div>
+            </div>
+            <div class="center-item">
+                <!-- Updated: Button text changed to "Buy New Items" -->
+                <button id="addStockButton">Buy New Items</button>
+            </div>
+            <div class="right-item">
+                <!-- Updated: Added Cancel Buy Order button -->
+                <button id="cancelBuyOrderButton" style="display: none;">Cancel Buy Order</button>
+                <button id="buyOrderButton" style="display: none;">Buy Order</button>
+            </div>
+        </div>
         <div id="stockDisplay">
             <!-- Current stock items will be displayed here -->
         </div>
-        <!-- Buy Order Button -->
-        <button id="buyOrderButton" style="display: none;">Buy Order</button>
     </div>
 
     <!-- Add Stock Modal Popup -->
@@ -51,16 +63,16 @@
     <div id="buyOrderModal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="closeBuyOrderModal">&times;</span>
-            <h2>Finalize Purchase</h2>
+            <h2>Finalize Buying Amount</h2>
             <form id="buyOrderForm">
                 <p id="currentAmountInfo"></p>
                 <label for="totalDiscountInput">Total Discount (%):</label>
-                <input type="number" id="totalDiscountInput" min="0" value="0" required><br><br>
+                <input type="number" id="totalDiscountInput" min="0" value="0" max="100" required>
 
                 <label for="totalAmountInput">Total Amount:</label>
-                <input type="text" id="totalAmountInput" disabled><br><br>
+                <input type="text" id="totalAmountInput" disabled>
 
-                <button type="submit" id="confirmBuyOrder">OK</button>
+                <button type="submit" id="confirmBuyOrder">Buy Items</button>
             </form>
         </div>
     </div>

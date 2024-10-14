@@ -1,5 +1,3 @@
-/* js/special_offer.js */
-
 const apiURL = 'http://127.0.0.1:8000';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeButton = document.querySelector('.close-button');
     const cancelButton = document.getElementById('cancelButton');
     const saveButton = document.getElementById('saveButton');
+    const percentageSection = document.getElementById('percentageSection');
+    const amountSection = document.getElementById('amountSection');
 
     const offerForm = document.getElementById('offerForm');
     const offerNameInput = document.getElementById('offerName');
@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const discountAmountInput = document.getElementById('discountAmount');
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
+    const discountTypeRadios = document.getElementsByName('discountType');
 
     const shopId = localStorage.getItem('shop_id');
 
@@ -108,11 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to open the modal for adding/editing
     function openModal(title, offer = null) {
         modalTitle.textContent = title;
         offerModal.style.display = 'block';
-
+    
         if (offer) {
             // Editing existing offer
             editingOfferId = offer.offer_id;
@@ -121,12 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
             discountAmountInput.value = offer.discount_amount || '';
             startDateInput.value = offer.offer_start_date;
             endDateInput.value = offer.offer_end_date;
+    
+            if (offer.discount_percentage > 0) {
+                discountTypeRadios[0].checked = true; // Percentage
+            } else {
+                discountTypeRadios[1].checked = true; // Amount
+            }
         } else {
             // Adding new offer
             editingOfferId = null;
             offerForm.reset();
+            discountTypeRadios[0].checked = true; // Default to Percentage
         }
+    
+        // Update visibility of discount input sections
+        handleDiscountTypeChange();
     }
+    
 
     // Function to close the modal
     function closeModal() {
@@ -147,13 +158,37 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModal();
     });
 
+    // Event listener for discount type radio buttons
+    discountTypeRadios.forEach(radio => {
+        radio.addEventListener('change', handleDiscountTypeChange);
+    });
+
+    function handleDiscountTypeChange() {
+        if (discountTypeRadios[0].checked) {
+            // Percentage selected
+            percentageSection.style.display = 'block';
+            amountSection.style.display = 'none';
+            discountPercentageInput.disabled = false;
+            discountAmountInput.disabled = true;
+            discountAmountInput.value = '';
+        } else {
+            // Amount selected
+            percentageSection.style.display = 'none';
+            amountSection.style.display = 'block';
+            discountPercentageInput.disabled = true;
+            discountPercentageInput.value = '';
+            discountAmountInput.disabled = false;
+        }
+    }
+    
+
     // Save button (form submit) event listener
     offerForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
         const offerName = offerNameInput.value.trim();
-        const discountPercentage = parseFloat(discountPercentageInput.value) || 0;
-        const discountAmount = parseFloat(discountAmountInput.value) || 0;
+        const discountPercentage = discountPercentageInput.disabled ? 0 : parseFloat(discountPercentageInput.value) || 0;
+        const discountAmount = discountAmountInput.disabled ? 0 : parseFloat(discountAmountInput.value) || 0;
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
 
@@ -163,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (discountPercentage <= 0 && discountAmount <= 0) {
-            alert('Please provide a discount percentage or amount.');
+            alert('Please provide a valid discount percentage or amount.');
             return;
         }
 
