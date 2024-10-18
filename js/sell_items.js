@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!shopId) {
         alert('Shop ID not found. Please log in.');
-        window.location.href = 'login.html'; // Redirect to login page or appropriate page
+        window.location.href = 'signup-login.html'; // Redirect to login page or appropriate page
         return;
     }
 
